@@ -1,4 +1,4 @@
-# altv-pkg
+# altv-pkg2
 
 ![](https://i.imgur.com/XgO9FzQ.png)
 
@@ -13,13 +13,13 @@ Download server binaries quickly and easily for [alt:V Servers](https://altv.mp)
 ## How to install?
 
 ```
-npm i --save-dev altv-pkg
+npm i --save-dev altv-pkg2
 ```
 
 ## How to run?
 
 ```
-npx altv-pkg release
+npx altv-pkg dev
 ```
 
 ## Configuration
@@ -28,6 +28,8 @@ Create a `.altvpkgrc.json` file in your root directory and add the following JSO
 ```
 {
     "loadBytecodeModule": true,
-    "loadCSharpModule": true
+    "loadCSharpModule": true,
+    "loadJSModule": true,
+    "loadJSV2Module": true
 }
 ```
