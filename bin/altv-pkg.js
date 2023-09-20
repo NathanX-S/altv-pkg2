@@ -87,11 +87,6 @@ for (let i = 0; i < args.length; i++) {
         platform = "x64_linux";
         break;
     }
-
-    if (args[i] === "jsv2") {
-        jsv2 = true;
-        break;
-    }
 }
 
 if (!branch) {
@@ -127,15 +122,14 @@ async function start() {
 
     const sharedFiles = {};
     let res = await axios.get(`https://${CDN_ADDRESS}/data/${branch}/update.json`, { responseType: 'json', headers });
-    let jsv2_res = null;
     for ([file, hash] of Object.entries(res.data.hashList)) {
         sharedFiles[file] = `https://${CDN_ADDRESS}/data/${branch}/${file}`;
     }
 
     const linuxFiles = {
         ...sharedFiles,
-        ... jsv2 ? {} : {'modules/libjs-module.so': `https://${CDN_ADDRESS}/js-module/${branch}/${platform}/modules/js-module/libjs-module.so`,
-        'libnode.so.108': `https://${CDN_ADDRESS}/js-module/${branch}/${platform}/modules/js-module/libnode.so.108`},
+        'modules/libjs-module.so': `https://${CDN_ADDRESS}/js-module/${branch}/${platform}/modules/js-module/libjs-module.so`,
+        'libnode.so.108': `https://${CDN_ADDRESS}/js-module/${branch}/${platform}/modules/js-module/libnode.so.108`,
         'start.sh': `https://${CDN_ADDRESS}/oth.rt.sh`,
     };
 
