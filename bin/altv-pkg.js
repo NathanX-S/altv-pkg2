@@ -16,7 +16,7 @@ const rootPath = process.cwd();
 let platform = process.platform == 'win32' ? 'x64_win32' : 'x64_linux';
 let branch = null;
 
-const { loadBytecodeModule, loadCSharpModule } = loadRuntimeConfig();
+const { loadBytecodeModule, loadCSharpModule, loadJSModule, loadJSV2Module } = loadRuntimeConfig();
 
 function authorizeDiscord() {
     console.log(chalk.greenBright('===== Authorizing via Discord ====='));
@@ -87,6 +87,11 @@ for (let i = 0; i < args.length; i++) {
         platform = "x64_linux";
         break;
     }
+
+    if (args[i] === "jsv2") {
+        jsv2 = true;
+        break;
+    }
 }
 
 if (!branch) {
@@ -122,16 +127,18 @@ async function start() {
 
     const sharedFiles = {};
     let res = await axios.get(`https://${CDN_ADDRESS}/data/${branch}/update.json`, { responseType: 'json', headers });
+    let jsv2_res = null;
     for ([file, hash] of Object.entries(res.data.hashList)) {
         sharedFiles[file] = `https://${CDN_ADDRESS}/data/${branch}/${file}`;
     }
 
     const linuxFiles = {
         ...sharedFiles,
-        'modules/libjs-module.so': `https://${CDN_ADDRESS}/js-module/${branch}/${platform}/modules/js-module/libjs-module.so`,
-        'libnode.so.108': `https://${CDN_ADDRESS}/js-module/${branch}/${platform}/modules/js-module/libnode.so.108`,
-        'start.sh': `https://${CDN_ADDRESS}/others/start.sh`,
+        ... jsv2 ? {} : {'modules/libjs-module.so': `https://${CDN_ADDRESS}/js-module/${branch}/${platform}/modules/js-module/libjs-module.so`,
+        'libnode.so.108': `https://${CDN_ADDRESS}/js-module/${branch}/${platform}/modules/js-module/libnode.so.108`},
+        'start.sh': `https://${CDN_ADDRESS}/oth.rt.sh`,
     };
+
 
     res = await axios.get(`https://${SERVER_CDN_ADDRESS}/server/${serverBranch}/x64_linux/update.json`, { responseType: 'json', headers });
     for ([file, hash] of Object.entries(res.data.hashList)) {
@@ -193,6 +200,38 @@ async function start() {
 
         linuxUpdates.push(`https://${CDN_ADDRESS}/coreclr-module/${branch}/x64_linux/update.json`);
         windowsUpdates.push(`https://${CDN_ADDRESS}/coreclr-module/${branch}/x64_win32/update.json`);
+    }
+
+    if (loadJSModule) {
+        res = await axios.get(`https://${CDN_ADDRESS}/js-module/${branch}/x64_linux/update.json`, { responseType: 'json', headers });
+        for ([file, hash] of Object.entries(res.data.hashList)) {
+            linuxFiles[file] = `https://${CDN_ADDRESS}/js-module/${branch}/x64_linux/${file}`;
+        }
+
+        res = await axios.get(`https://${CDN_ADDRESS}/js-module/${branch}/x64_win32/update.json`, { responseType: 'json', headers });
+        for ([file, hash] of Object.entries(res.data.hashList)) {
+            windowsFiles[file] = `https://${CDN_ADDRESS}/js-module/${branch}/x64_win32/${file}`;
+        }
+
+        linuxUpdates.push(`https://${CDN_ADDRESS}/js-module/${branch}/x64_linux/update.json`);
+        windowsUpdates.push(`https://${CDN_ADDRESS}/js-module/${branch}/x64_win32/update.json`);
+    }
+
+    if (loadJSV2Module && branch == "dev") {
+        res = await axios.get(`https://${CDN_ADDRESS}/js-module-v2/${branch}/x64_linux/update.json`, { responseType: 'json', headers });
+        for ([file, hash] of Object.entries(res.data.hashList)) {
+            linuxFiles[file] = `https://${CDN_ADDRESS}/js-module-v2/${branch}/x64_linux/${file}`;
+        }
+
+        res = await axios.get(`https://${CDN_ADDRESS}/js-module-v2/${branch}/x64_win32/update.json`, { responseType: 'json', headers });
+        for ([file, hash] of Object.entries(res.data.hashList)) {
+            windowsFiles[file] = `https://${CDN_ADDRESS}/js-module-v2/${branch}/x64_win32/${file}`;
+        }
+
+        linuxUpdates.push(`https://${CDN_ADDRESS}/js-module-v2/${branch}/x64_linux/update.json`);
+        windowsUpdates.push(`https://${CDN_ADDRESS}/js-module-v2/${branch}/x64_win32/update.json`);
+    } else if (loadJSV2Module) {
+        console.log(chalk.yellowBright(`===== JSV2 is only intended for the 'dev' branch at this point in time. Skipping... =====`))
     }
 
     const [filesUpdate, filesToUse] = (platform == 'x64_win32')
@@ -312,6 +351,8 @@ function correctPathIfNecessary(file) {
 function loadRuntimeConfig() {
     let loadBytecodeModule = false;
     let loadCSharpModule = false;
+    let loadJSModule = true;
+    let loadJSV2Module = false;
 
     try {
         const data = fs.readFileSync(`./${RC_FILE_NAME}`, { encoding: 'utf8' });
@@ -319,11 +360,13 @@ function loadRuntimeConfig() {
 
         loadBytecodeModule = !!parsedData.loadBytecodeModule;
         loadCSharpModule = !!parsedData.loadCSharpModule;
+        loadJSModule = !!parsedData.loadJSModule;
+        loadJSV2Module = !!parsedData.loadJSV2Module;
     } catch (e) {
         console.log(chalk.gray(`Configuration file '${RC_FILE_NAME}' could not be read. Continuing without...`));
     }
 
-    return { loadBytecodeModule, loadCSharpModule };
+    return { loadBytecodeModule, loadCSharpModule, loadJSModule, loadJSV2Module };
 }
 
 start();
