@@ -6,7 +6,7 @@
     "author": "stuyk forked by eris",
     "license": "ISC",
     "bin": {
-        "altv-pkg": "./bin/altv-pkg.js"
+        "altv-pkg2": "./bin/altv-pkg.js"
     },
     "dependencies": {
         "axios": "^0.26.1",

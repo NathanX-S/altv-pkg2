@@ -19,7 +19,7 @@ npm i --save-dev altv-pkg2
 ## How to run?
 
 ```
-npx altv-pkg dev
+npx altv-pkg2 dev
 ```
 
 ## Configuration
